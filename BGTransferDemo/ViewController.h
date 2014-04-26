@@ -8,13 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-// Define some constants regarding the tag values of the prototype cell's subviews.
-#define CellLabelTagValue               10
-#define CellStartPauseButtonTagValue    20
-#define CellStopButtonTagValue          30
-#define CellProgressBarTagValue         40
-#define CellLabelReadyTagValue          50
-
 @interface ViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, NSURLSessionDelegate>
 
 @property (weak, nonatomic) IBOutlet UITableView *tblFiles;

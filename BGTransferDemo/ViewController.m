@@ -9,6 +9,14 @@
 #import "ViewController.h"
 #import "FileDownloadInfo.h"
 
+// Define some constants regarding the tag values of the prototype cell's subviews.
+#define CellLabelTagValue               10
+#define CellStartPauseButtonTagValue    20
+#define CellStopButtonTagValue          30
+#define CellProgressBarTagValue         40
+#define CellLabelReadyTagValue          50
+
+
 @interface ViewController ()
 
 @property (nonatomic, strong) NSURLSession *session;
@@ -16,6 +24,8 @@
 @property (nonatomic, strong) NSMutableArray *arrFileDownloadData;
 
 @property (nonatomic, strong) NSURL *docDirectoryURL;
+
+-(int)getFileDownloadInfoIndexWithTaskIdentifier:(unsigned long)taskIdentifier;
 
 @end
 
@@ -67,6 +77,26 @@
     [self.arrFileDownloadData addObject:[[FileDownloadInfo alloc] initWithFileTitle:@"AV Foundation" andDownloadSource:@"https://developer.apple.com/library/ios/documentation/AudioVideo/Conceptual/AVFoundationPG/AVFoundationPG.pdf"]];
     [self.arrFileDownloadData addObject:[[FileDownloadInfo alloc] initWithFileTitle:@"iPhone User Guide" andDownloadSource:@"http://manuals.info.apple.com/MANUALS/1000/MA1565/en_US/iphone_user_guide.pdf"]];
 }
+
+// In a loop, we’ll access all FileDownloadInfo objects of the arrFileDownloadData array one by one,
+// until we find the task with identifier matching to the parameter’s one.
+// When it’s found, we’ll just break the loop and we’ll return the found index value.
+-(int)getFileDownloadInfoIndexWithTaskIdentifier:(unsigned long)taskIdentifier
+{
+    int index = 0;
+    for (int i=0; i<[self.arrFileDownloadData count]; i++) {
+        FileDownloadInfo *fdi = [self.arrFileDownloadData objectAtIndex:i];
+        if(fdi.taskIdentifier == taskIdentifier)
+        {
+            index = i;
+            break;
+        }
+    }
+    
+    return index;
+}
+
+#pragma mark - UITableView Delegate and Datasource method implementation
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
@@ -144,6 +174,7 @@
 
 
 #pragma mark - IBAction method implementation
+
 - (IBAction)startOrPauseDownloadingSingleFile:(id)sender
 {
     //Check if the parent view of the sender button is a table view cell
@@ -198,4 +229,35 @@
     }
 }
 
+#pragma mark - NSURLSession Delegate method implementation
+
+-(void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite{
+
+    //The first thing we have to do, is to check if the system is aware of the size of the file that’s being downloaded.
+    if(totalBytesExpectedToWrite == NSURLSessionTransferSizeUnknown)
+    {
+        NSLog(@"Unknown transfer size");
+    }
+    else    //We will proceed with the progress update if only this data exists.
+    {
+        //We locate the index of the appropriate FileDownloadInfo object in the arrFileDownloadData array, based on the task description of the downloadTask parameter object, and we use a local pointer to access it.
+        
+
+        // Locate the FileDownloadInfo object among all based on the taskIdentifier property of the task.
+        int index = [self getFileDownloadInfoIndexWithTaskIdentifier:downloadTask.taskIdentifier];
+        FileDownloadInfo *fdi = [self.arrFileDownloadData objectAtIndex:index];
+
+        //Because the download task works in background threads, any visual upgrades must take place in the main thread of the app
+        [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+            //Calculate the progress
+            fdi.downloadProgress = (double)totalBytesWritten / (double)totalBytesExpectedToWrite;
+            
+            // Get the progress view of the appropriate cell and update its progress.
+            UITableViewCell *cell = [self.tblFiles cellForRowAtIndexPath:[NSIndexPath indexPathForRow:index inSection:0]];
+            UIProgressView *progressView = (UIProgressView *)[cell viewWithTag:CellProgressBarTagValue];
+            progressView.progress = fdi.downloadProgress;
+        }];
+        
+    }
+}
 @end
