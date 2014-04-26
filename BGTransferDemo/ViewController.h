@@ -15,7 +15,7 @@
 #define CellProgressBarTagValue         40
 #define CellLabelReadyTagValue          50
 
-@interface ViewController : UIViewController
+@interface ViewController : UIViewController<UITableViewDelegate, UITableViewDataSource>
 
 @property (weak, nonatomic) IBOutlet UITableView *tblFiles;
 
