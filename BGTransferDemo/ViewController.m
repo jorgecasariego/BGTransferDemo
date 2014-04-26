@@ -37,6 +37,18 @@
     
     //Disable scrolling in the table view
     self.tblFiles.scrollEnabled = NO;
+    
+    // backgroundSessionConfiguration class method is used when it’s desirable to perform background tasks
+    // The backgroundSessionConfiguration class method accepts one parameter, an identifier, which uniquely
+    // identifies the session started by our app in the system.
+    NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfiguration:@"com.BGTransferDemo"];
+    
+    //Through this, we will allow five simultaneous downloads to take place at once
+    sessionConfiguration.HTTPMaximumConnectionsPerHost = 5;
+    
+    //The next step that must be performed, is to instantiate the session property using the sessionConfiguration object
+    //Here a NSURLSession session has been instantiated and is now ready to be used in order to fire background download tasks.
+    self.session = [NSURLSession sessionWithConfiguration:sessionConfiguration delegate:self delegateQueue:nil];
 }
 
 - (void)didReceiveMemoryWarning
