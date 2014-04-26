@@ -21,6 +21,7 @@
 		27D92DB7190AFF1500833EEC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D92D99190AFF1500833EEC /* UIKit.framework */; };
 		27D92DBF190AFF1500833EEC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 27D92DBD190AFF1500833EEC /* InfoPlist.strings */; };
 		27D92DC1190AFF1500833EEC /* BGTransferDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D92DC0190AFF1500833EEC /* BGTransferDemoTests.m */; };
+		27D92DCC190BB3C200833EEC /* FileDownloadInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D92DCB190BB3C200833EEC /* FileDownloadInfo.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +54,8 @@
 		27D92DBC190AFF1500833EEC /* BGTransferDemoTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "BGTransferDemoTests-Info.plist"; sourceTree = "<group>"; };
 		27D92DBE190AFF1500833EEC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		27D92DC0190AFF1500833EEC /* BGTransferDemoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BGTransferDemoTests.m; sourceTree = "<group>"; };
+		27D92DCA190BB3C200833EEC /* FileDownloadInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileDownloadInfo.h; sourceTree = "<group>"; };
+		27D92DCB190BB3C200833EEC /* FileDownloadInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileDownloadInfo.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,6 +120,8 @@
 				27D92DA7190AFF1500833EEC /* Main.storyboard */,
 				27D92DAA190AFF1500833EEC /* ViewController.h */,
 				27D92DAB190AFF1500833EEC /* ViewController.m */,
+				27D92DCA190BB3C200833EEC /* FileDownloadInfo.h */,
+				27D92DCB190BB3C200833EEC /* FileDownloadInfo.m */,
 				27D92DAD190AFF1500833EEC /* Images.xcassets */,
 				27D92D9C190AFF1500833EEC /* Supporting Files */,
 			);
@@ -199,6 +204,13 @@
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = "Jorge Casariego";
 				TargetAttributes = {
+					27D92D91190AFF1500833EEC = {
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
+					};
 					27D92DB2190AFF1500833EEC = {
 						TestTargetID = 27D92D91190AFF1500833EEC;
 					};
@@ -250,6 +262,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27D92DAC190AFF1500833EEC /* ViewController.m in Sources */,
+				27D92DCC190BB3C200833EEC /* FileDownloadInfo.m in Sources */,
 				27D92DA6190AFF1500833EEC /* AppDelegate.m in Sources */,
 				27D92DA2190AFF1500833EEC /* main.m in Sources */,
 			);
