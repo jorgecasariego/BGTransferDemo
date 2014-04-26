@@ -10,4 +10,16 @@
 
 @interface ViewController : UIViewController
 
+@property (weak, nonatomic) IBOutlet UITableView *tblFiles;
+
+- (IBAction)startOrPauseDownloadingSingleFile:(id)sender;
+
+- (IBAction)stopDownloading:(id)sender;
+
+- (IBAction)startAllDownloads:(id)sender;
+
+- (IBAction)stopAllDownloads:(id)sender;
+
+- (IBAction)initializeAll:(id)sender;
+
 @end
