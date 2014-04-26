@@ -142,4 +142,60 @@
     return cell;
 }
 
+
+#pragma mark - IBAction method implementation
+- (IBAction)startOrPauseDownloadingSingleFile:(id)sender
+{
+    //Check if the parent view of the sender button is a table view cell
+    //All the subviews we added to the prototype cells, belong to a view named content view, and this content view is a subview of a scroll view. The scroll view is actually a direct subview of the cell, that’s why we use the superview property so many times.
+    if([[[[sender superview] superview]superview] isKindOfClass:[UITableViewCell class]])
+    {
+        //Get the container cell
+        UITableViewCell *containerCell = (UITableViewCell *)[[[sender superview] superview] superview];
+        
+        //Get the row (index) of the cell. We'll keep the index path as well, we'll need it later
+        NSIndexPath *cellIndexPath = [self.tblFiles indexPathForCell:containerCell];
+        int cellIndex = cellIndexPath.row;
+        
+        //Get the FileDownloadInfo object being at the cellIndex position of the array
+        FileDownloadInfo *fdi = [self.arrFileDownloadData objectAtIndex:cellIndex];
+        
+        // The isDownloading property of the fdi object defines whether a downloading should be started
+        // or be stopped.
+        if(!fdi.isDownloading)
+        {
+            // This is the case where a download task should be started.
+            
+            // Create a new task, but check whether it should be created using a URL or resume data.
+            //When a new download task gets started, this property gets the tasks’s identifier value, so it stops having the −1 value
+            if(fdi.taskIdentifier == -1)
+            {
+                // If the taskIdentifier property of the fdi object has value -1, then create a new task
+                // providing the appropriate URL as the download source.
+                // The newly created download task is assigned to the downloadTask of the fdi object, so we can have a strong reference to it and access it directly later on.
+                fdi.downloadTask = [self.session downloadTaskWithURL:[NSURL URLWithString:fdi.downloadSource]];
+                
+                //Keep the new task identifier
+                fdi.taskIdentifier = fdi.downloadTask.taskIdentifier;
+                
+                //Start the task
+                [fdi.downloadTask resume];
+            }
+            else{
+                // The resume of a download task will be done here.
+            }
+        }
+        else{
+            //  The pause of a download task will be done here.
+        }
+        
+        //Change the isDownloading property value
+        fdi.isDownloading = !fdi.isDownloading;
+        
+        //Reload the table view
+        [self.tblFiles reloadRowsAtIndexPaths:@[cellIndexPath] withRowAnimation:UITableViewRowAnimationNone];
+        
+    }
+}
+
 @end
