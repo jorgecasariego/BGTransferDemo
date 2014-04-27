@@ -274,6 +274,40 @@
     }
 }
 
+- (IBAction)startAllDownloads:(id)sender
+{
+    // Access all FileDownloadInfo objects using a loop.
+    for (int i=0; i<[self.arrFileDownloadData count]; i++) {
+        FileDownloadInfo *fdi = [self.arrFileDownloadData objectAtIndex:i];
+        
+        // Check if a file is already being downloaded or not.
+        if(!fdi.isDownloading)
+        {
+            // Check if should create a new download task using a URL, or using resume data.
+            if(fdi.taskIdentifier == -1)
+            {
+                fdi.downloadTask = [self.session downloadTaskWithURL:[NSURL URLWithString:fdi.downloadSource]];
+            }
+            else
+            {
+                fdi.downloadTask = [self.session downloadTaskWithResumeData:fdi.taskResume];
+            }
+            
+            // Keep the new taskIdentifier.
+            fdi.taskIdentifier = fdi.downloadTask.taskIdentifier;
+            
+            //Start the download
+            [fdi.downloadTask resume];
+            
+            //Indicate for each file that is being downloaded
+            fdi.isDownloading = YES;
+        }
+    }
+    
+    //reload the table view
+    [self.tblFiles reloadData];
+}
+
 #pragma mark - NSURLSession Delegate method implementation
 
 -(void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite{
