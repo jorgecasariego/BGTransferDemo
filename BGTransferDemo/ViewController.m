@@ -213,15 +213,60 @@
                 [fdi.downloadTask resume];
             }
             else{
-                // The resume of a download task will be done here.
+                //  A new download task is created by using the downloadTaskWithResumeData: method of the session object.
+                //  This new task is assigned to the downloadTask object for future access, and then it’s resumed.
+                //  Finally, the new task identifier is stored to the respective property.
+                
+                //Create a new download task, which will use the stored resume data
+                fdi.downloadTask = [self.session downloadTaskWithResumeData:fdi.taskResume];
+                [fdi.downloadTask resume];
+                
+                //Keep the new download task identifier
+                fdi.taskIdentifier = fdi.downloadTask.taskIdentifier;
             }
         }
         else{
-            //  The pause of a download task will be done here.
+            // The phrase pause a download task is good enough to make us understand the concept of our discussion, however programmatically speaking this is not accurate. The truth is that either we want to pause or stop a download task, we must perform the same action, to cancel the task. The difference is that in the first case the download task produces some data for resuming the download, while in the second case that doesn’t happen. In both cases, the task gets destroyed and if it’s desirable to resume the download, a new task is created using the resume data earlier produced.
+            
+            // Pause the  task by cancelling it and storing the resume data
+            [fdi.downloadTask cancelByProducingResumeData:^(NSData *resumeData){
+                if(resumeData != nil)
+                {
+                    fdi.taskResume = [[NSData alloc] initWithData:resumeData];
+                }
+            }];
         }
         
         //Change the isDownloading property value
         fdi.isDownloading = !fdi.isDownloading;
+        
+        //Reload the table view
+        [self.tblFiles reloadRowsAtIndexPaths:@[cellIndexPath] withRowAnimation:UITableViewRowAnimationNone];
+        
+    }
+}
+
+- (IBAction)stopDownloading:(id)sender
+{
+    if ([[[[sender superview] superview] superview] isKindOfClass:[UITableViewCell class]])
+    {
+        // Get the container cell.
+        UITableViewCell *containerCell = (UITableViewCell *)[[[sender superview] superview] superview];
+        
+        // Get the row (index) of the cell. We'll keep the index path as well, we'll need it later.
+        NSIndexPath *cellIndexPath = [self.tblFiles indexPathForCell:containerCell];
+        int cellIndex = cellIndexPath.row;
+        
+        // Get the FileDownloadInfo object being at the cellIndex position of the array.
+        FileDownloadInfo *fdi = [self.arrFileDownloadData objectAtIndex:cellIndex];
+        
+        //Cancel the task
+        [fdi.downloadTask cancel];
+        
+        //Change all related properties
+        fdi.isDownloading = NO;
+        fdi.taskIdentifier = -1;
+        fdi.downloadProgress = 0.0;
         
         //Reload the table view
         [self.tblFiles reloadRowsAtIndexPaths:@[cellIndexPath] withRowAnimation:UITableViewRowAnimationNone];
@@ -260,4 +305,64 @@
         
     }
 }
+
+//This method is called by the system every time a download is over, and is our duty to write the appropriate code in order
+//to get the file from its temporary location
+-(void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location
+{
+    NSError *error;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    //lastPathComponent provide us the actual file name, along with its extension
+    NSString *destinationFileName = downloadTask.originalRequest.URL.lastPathComponent;
+    //This destination is where the file will be copied permanently
+    NSURL *destinationURL = [self.docDirectoryURL URLByAppendingPathComponent:destinationFileName];
+    
+    //Check if the file already exists in the Documents directory, using the fileManager object
+    //that was instantiated at the beginning of the method, and the destinationURL value
+    if([fileManager fileExistsAtPath:[destinationURL path]])
+    {
+        //If it already exists, then is being removed.
+        [fileManager removeItemAtURL:destinationURL error:nil];
+    }
+    
+    //The file copying process takes place here
+    BOOL success = [fileManager copyItemAtURL:location toURL:destinationURL error:&error];
+    
+    if(success)
+    {
+        // Change the flag values of the respective FileDownloadInfo object.
+        int index = [self getFileDownloadInfoIndexWithTaskIdentifier:downloadTask.taskIdentifier];
+        FileDownloadInfo *fdi = [self.arrFileDownloadData objectAtIndex:index];
+        
+        fdi.isDownloading = NO;
+        fdi.downloadComplete = YES;
+        
+        // Set the initial value to the taskIdentifier property of the fdi object,
+        // so when the start button gets tapped again to start over the file download.
+        fdi.taskIdentifier = nil;
+        
+        [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+            // Reload the respective table view row using the main thread.
+            [self.tblFiles reloadRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:index inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
+        }];
+    }
+    else
+    {
+        NSLog(@"Unable to copy temp file. Error: %@", [error localizedDescription]);
+    }
+    
+}
+
+-(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
+{
+    if (error != nil) {
+        NSLog(@"Download completed with error: %@", [error localizedDescription]);
+    }
+    else{
+        NSLog(@"Download finished successfully.");
+    }
+}
+
+
 @end
