@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "FileDownloadInfo.h"
+#import "AppDelegate.h"
 
 // Define some constants regarding the tag values of the prototype cell's subviews.
 #define CellLabelTagValue               10
@@ -94,6 +95,38 @@
     }
     
     return index;
+}
+
+- (IBAction)initializeAll:(id)sender
+{
+    // Access all FileDownloadInfo objects using a loop and give all properties their initial values.
+    for (int i=0; i<[self.arrFileDownloadData count]; i++) {
+        FileDownloadInfo *fdi = [self.arrFileDownloadData objectAtIndex:i];
+        
+        if (fdi.isDownloading) {
+            [fdi.downloadTask cancel];
+        }
+        
+        fdi.isDownloading = NO;
+        fdi.downloadComplete = NO;
+        fdi.taskIdentifier = -1;
+        fdi.downloadProgress = 0.0;
+        fdi.downloadTask = nil;
+    }
+    
+    // Reload the table view.
+    [self.tblFiles reloadData];
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    // Get all files in documents directory.
+    NSArray *allFiles = [fileManager contentsOfDirectoryAtURL:self.docDirectoryURL
+                                   includingPropertiesForKeys:nil
+                                                      options:NSDirectoryEnumerationSkipsHiddenFiles
+                                                        error:nil];
+    for (int i=0; i<[allFiles count]; i++) {
+        [fileManager removeItemAtURL:[allFiles objectAtIndex:i] error:nil];
+    }
 }
 
 #pragma mark - UITableView Delegate and Datasource method implementation
@@ -418,6 +451,37 @@
     else{
         NSLog(@"Download finished successfully.");
     }
+}
+
+// When the system has no more messages to send to our app after a background transfer,
+// the URLSessionDidFinishEventsForBackgroundURLSession: NSURLSession delegate method is called.
+// In this method we will make the call to the completion handler, and we will show the local notification.
+- (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session
+{
+    AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
+    
+    // Check if all download tasks have been finished.
+    [self.session getTasksWithCompletionHandler:^(NSArray *dataTasks, NSArray *uploadTasks, NSArray *downloadTasks) {
+        if ([downloadTasks count] == 0) {
+            if (appDelegate.backgroundTransferCompletionHandler != nil) {
+                // Copy locally the completion handler.
+                void(^completionHandler)() = appDelegate.backgroundTransferCompletionHandler;
+                
+                // Make nil the backgroundTransferCompletionHandler.
+                appDelegate.backgroundTransferCompletionHandler = nil;
+                
+                [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+                    // Call the completion handler to tell the system that there are no other background transfers.
+                    completionHandler();
+                    
+                    // Show a local notification when all downloads are over.
+                    UILocalNotification *localNotification = [[UILocalNotification alloc] init];
+                    localNotification.alertBody = @"All files have been downloaded!";
+                    [[UIApplication sharedApplication] presentLocalNotificationNow:localNotification];
+                }];
+            }
+        }
+    }];
 }
 
 

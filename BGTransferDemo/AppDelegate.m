@@ -43,4 +43,11 @@
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
 
+// The completion handler passed from the system to our app is stored to the property we just declared.
+//The backgroundTransferCompletionHandler is the one that is called when all downloads are complete
+- (void)application:(UIApplication *)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler
+{
+    self.backgroundTransferCompletionHandler = completionHandler;
+}
+
 @end
